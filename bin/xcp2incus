@@ -1,0 +1,99 @@
+#!/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+show_help() {
+    echo "Available subcommands:"
+    for script in "$SCRIPT_DIR/scripts"/*.sh; do
+        [ -f "$script" ] || continue
+        basename "$script" .sh
+    done
+}
+
+if [ $# -lt 1 ]; then
+    show_help
+    exit 1
+fi
+
+SUBCOMMAND="$1"
+
+if [ "$SUBCOMMAND" = "--help" ]; then
+    show_help
+    exit 0
+fi
+
+if [ "$SUBCOMMAND" = "next" ]; then
+    # Verify we are in an xcp2incus VM directory
+    if [ ! -f "xcp2incus.env" ]; then
+        echo "Error: Not in an xcp2incus VM directory (xcp2incus.env not found)" >&2
+        exit 1
+    fi
+
+    # Read current status
+    if [ ! -f "status" ]; then
+        echo "Error: status file not found" >&2
+        exit 1
+    fi
+
+    # Parse optional --till argument
+    TILL_PROGRESS=""
+    shift
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --till)
+                TILL_PROGRESS="$2"
+                shift 2
+                ;;
+            *)
+                echo "Error: Unknown option '$1'" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    CURRENT_STATUS=$(cat status)
+
+    # Determine next script to execute
+    # Status is a number when idle (e.g., "5" means step 5 is complete, run step 10 next)
+    if [[ "$CURRENT_STATUS" =~ ^[0-9]+$ ]]; then
+        # Find next script with number greater than current status
+        NEXT_SCRIPT=""
+        for script in "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
+            [ -f "$script" ] || continue
+            SCRIPT_NUM=$(basename "$script" | cut -d- -f1)
+            if [ "$SCRIPT_NUM" -gt "$CURRENT_STATUS" ]; then
+                # Check if we should stop at --till limit
+                if [ -n "$TILL_PROGRESS" ] && [ "$SCRIPT_NUM" -gt "$TILL_PROGRESS" ]; then
+                    echo "Reached --till limit ($TILL_PROGRESS)"
+                    exit 0
+                fi
+                NEXT_SCRIPT="$script"
+                break
+            fi
+        done
+
+        if [ -z "$NEXT_SCRIPT" ]; then
+            echo "Migration complete - no more steps to execute"
+            exit 0
+        fi
+
+        echo "Executing next step: $(basename "$NEXT_SCRIPT")"
+        exec "$NEXT_SCRIPT"
+    else
+        echo "Error: Migration step '$CURRENT_STATUS' appears to be running" >&2
+        exit 1
+    fi
+fi
+
+shift
+
+SCRIPT_PATH="$SCRIPT_DIR/scripts/$SUBCOMMAND.sh"
+
+if [ ! -f "$SCRIPT_PATH" ]; then
+    echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2
+    echo "Script not found: $SCRIPT_PATH" >&2
+    exit 1
+fi
+
+exec "$SCRIPT_PATH" "$@"
