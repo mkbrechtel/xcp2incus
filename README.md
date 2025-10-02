@@ -16,10 +16,11 @@ Each migration step is represented by a percentage integer that indicates progre
 
 ## VM Metadata Storage
 
-Each VM being migrated has its own directory containing metadata files:
+Each VM being migrated has its own directory containing metadata files. A directory is identified as an xcp2incus migration folder by the presence of an `xcp2incus.env` file, which allows discovery via `find`:
 
 ```
 <vm-name>/
+├── xcp2incus.env          # Global environment variables for the VM migration
 ├── xcp-vm-uuid            # UUID of the source XCP-ng VM
 ├── xcp-host               # Hostname/IP of the source XCP-ng host
 ├── incus-host             # Hostname/IP of the destination Incus host
@@ -31,6 +32,7 @@ Each VM being migrated has its own directory containing metadata files:
 
 ### Metadata Files
 
+- **xcp2incus.env**: Global environment variables for the VM migration (also serves as marker file)
 - **xcp-vm-uuid**: UUID of the VM in XCP-ng
 - **xcp-host**: Source XCP-ng host hostname or IP address
 - **incus-host**: Destination Incus host hostname or IP address
