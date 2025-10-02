@@ -58,8 +58,9 @@ if [ "$SUBCOMMAND" = "next" ]; then
     # Status is a number when idle (e.g., "5" means step 5 is complete, run step 10 next)
     if [[ "$CURRENT_STATUS" =~ ^[0-9]+$ ]]; then
         # Find next script with number greater than current status
+        # Check local directory first, then global scripts directory
         NEXT_SCRIPT=""
-        for script in "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
+        for script in [0-9]*-*.sh "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
             [ -f "$script" ] || continue
             SCRIPT_NUM=$(basename "$script" | cut -d- -f1)
             if [ "$SCRIPT_NUM" -gt "$CURRENT_STATUS" ]; then
