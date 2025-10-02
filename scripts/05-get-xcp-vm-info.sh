@@ -4,6 +4,10 @@ set -euo pipefail
 # Get VM information from XCP-ng and store in metadata files
 # Usage: Run from within the VM directory
 
+# Extract step info from script name
+SCRIPT_NAME=$(basename "$0" .sh)
+STEP_NUM=$(echo "$SCRIPT_NAME" | cut -d- -f1)
+
 # Source environment variables
 source xcp2incus.env
 
@@ -12,7 +16,7 @@ VM_UUID=$(cat xcp-vm-uuid)
 XCP_HOST=$(cat xcp-host)
 
 # Update status
-echo "05-get-xcp-vm-info" > status
+echo "$SCRIPT_NAME" > status
 
 # Get VM name and save to xcp-vm-name
 VM_NAME=$(ssh "$XCP_HOST" "xe vm-param-get uuid=$VM_UUID param-name=name-label")
@@ -85,4 +89,4 @@ if [ -n "$DISK_UUIDS" ]; then
 fi
 
 # Mark step complete
-echo "06" > status
+echo "$((STEP_NUM + 1))" > status

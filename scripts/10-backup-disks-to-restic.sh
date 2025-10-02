@@ -4,6 +4,10 @@ set -euo pipefail
 # Backup VM disks to Restic
 # Usage: Run from within the VM directory
 
+# Extract step info from script name
+SCRIPT_NAME=$(basename "$0" .sh)
+STEP_NUM=$(echo "$SCRIPT_NAME" | cut -d- -f1)
+
 # Source environment variables
 source xcp2incus.env
 
@@ -12,7 +16,7 @@ VM_UUID=$(cat xcp-vm-uuid)
 XCP_HOST=$(cat xcp-host)
 
 # Update status
-echo "10-backup-disks-to-restic" > status
+echo "$SCRIPT_NAME" > status
 
 # Find all vdb-* directories
 shopt -s nullglob
@@ -59,4 +63,4 @@ echo ""
 echo "All disks backed up successfully"
 
 # Mark step complete
-echo "11" > status
+echo "$((STEP_NUM + 1))" > status
