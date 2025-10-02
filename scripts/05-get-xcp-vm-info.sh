@@ -60,6 +60,7 @@ if [ -n "$DISK_UUIDS" ]; then
                 # Write metadata files
                 echo "$uuid" > "vdb-$DEVICE/xcp-vdi-uuid"
                 echo "$VDI_SIZE" > "vdb-$DEVICE/xcp-vdi-size"
+                echo "$VBD_UUID" > "vdb-$DEVICE/xcp-vbd-uuid"
 
                 # Get and save VDI parameters
                 ssh "$XCP_HOST" "xe vdi-param-list uuid=$uuid" > "vdb-$DEVICE/xcp-vdi-params"

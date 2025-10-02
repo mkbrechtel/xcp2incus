@@ -56,35 +56,41 @@ if [ "$SUBCOMMAND" = "next" ]; then
 
     # Determine next script to execute
     # Status is a number when idle (e.g., "5" means step 5 is complete, run step 10 next)
+    # Status can also be a script name (e.g., "10-backup-disks-to-restic") which we treat as the number part
     if [[ "$CURRENT_STATUS" =~ ^[0-9]+$ ]]; then
-        # Find next script with number greater than current status
-        # Check local directory first, then global scripts directory
-        NEXT_SCRIPT=""
-        for script in [0-9]*-*.sh "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
-            [ -f "$script" ] || continue
-            SCRIPT_NUM=$(basename "$script" | cut -d- -f1)
-            if [ "$SCRIPT_NUM" -gt "$CURRENT_STATUS" ]; then
-                # Check if we should stop at --till limit
-                if [ -n "$TILL_PROGRESS" ] && [ "$SCRIPT_NUM" -gt "$TILL_PROGRESS" ]; then
-                    echo "Reached --till limit ($TILL_PROGRESS)"
-                    exit 0
-                fi
-                NEXT_SCRIPT="$script"
-                break
-            fi
-        done
-
-        if [ -z "$NEXT_SCRIPT" ]; then
-            echo "Migration complete - no more steps to execute"
-            exit 0
-        fi
-
-        echo "Executing next step: $(basename "$NEXT_SCRIPT")"
-        exec "$NEXT_SCRIPT"
+        PROGRESS_NUM="$CURRENT_STATUS"
+    elif [[ "$CURRENT_STATUS" =~ ^([0-9]+)- ]]; then
+        # Extract number from script name format
+        PROGRESS_NUM="${BASH_REMATCH[1]}"
     else
-        echo "Error: Migration step '$CURRENT_STATUS' appears to be running" >&2
+        echo "Error: Invalid status format '$CURRENT_STATUS'" >&2
         exit 1
     fi
+
+    # Find next script with number greater than current progress
+    # Check local directory first, then global scripts directory
+    NEXT_SCRIPT=""
+    for script in [0-9]*-*.sh "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
+        [ -f "$script" ] || continue
+        SCRIPT_NUM=$(basename "$script" | cut -d- -f1)
+        if [ "$SCRIPT_NUM" -gt "$PROGRESS_NUM" ]; then
+            # Check if we should stop at --till limit
+            if [ -n "$TILL_PROGRESS" ] && [ "$SCRIPT_NUM" -gt "$TILL_PROGRESS" ]; then
+                echo "Reached --till limit ($TILL_PROGRESS)"
+                exit 0
+            fi
+            NEXT_SCRIPT="$script"
+            break
+        fi
+    done
+
+    if [ -z "$NEXT_SCRIPT" ]; then
+        echo "Migration complete - no more steps to execute"
+        exit 0
+    fi
+
+    echo "Executing next step: $(basename "$NEXT_SCRIPT")"
+    exec "$NEXT_SCRIPT"
 fi
 
 shift
