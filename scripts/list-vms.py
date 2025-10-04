@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -36,7 +37,19 @@ def get_vdbs(vm_dir):
                 vdbs.append(device)
     return ",".join(vdbs) if vdbs else ""
 
+def format_status(status):
+    """Format status with leading zero for single digit numbers (1-9) and numbers > 10 except 100"""
+    if status and status.isdigit():
+        num = int(status)
+        if (0 < num < 10) or (10 < num < 100):
+            return '0' + status
+    return status
+
 def main():
+    parser = argparse.ArgumentParser(description='List VMs in migration')
+    parser.add_argument('--all', action='store_true', help='Show all VMs including those with status 100')
+    args = parser.parse_args()
+
     vm_dirs = find_vm_dirs()
 
     if not vm_dirs:
@@ -50,6 +63,11 @@ def main():
     for vm_dir in vm_dirs:
         vm_name = os.path.basename(vm_dir)
         status = read_file(os.path.join(vm_dir, "status"))
+
+        # Skip VMs with status "100" unless --all flag is set
+        if status == "100" and not args.all:
+            continue
+
         plan = read_file(os.path.join(vm_dir, "plan"))
         xcp_host = read_file(os.path.join(vm_dir, "xcp-host"))
         incus_host = read_file(os.path.join(vm_dir, "incus-host"))
@@ -57,7 +75,10 @@ def main():
         primary_ip = read_file(os.path.join(vm_dir, "primary-ip"))
         vdbs = get_vdbs(vm_dir)
 
-        rows.append([vm_name, status, plan, xcp_host, incus_host, incus_instance, primary_ip, vdbs])
+        # Format status with leading zero if needed
+        formatted_status = format_status(status)
+
+        rows.append([vm_name, formatted_status, plan, xcp_host, incus_host, incus_instance, primary_ip, vdbs])
 
     # Calculate column widths
     col_widths = [len(h) for h in headers]
