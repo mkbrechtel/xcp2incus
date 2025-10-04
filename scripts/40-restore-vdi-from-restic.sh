@@ -43,28 +43,16 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
     # Extract device name from vdb_dir (e.g., vdb-xvda -> xvda)
     VDB_DEVICE="${vdb_dir#vdb-}"
 
-    # Get VM name
-    VM_NAME=$(cat xcp-vm-name 2>/dev/null || echo "unknown")
-
     echo ""
     echo "Restoring $vdb_dir (VDI: $VDI_UUID)"
     echo "Size: ${VDI_SIZE_GIB} GiB"
 
-    # Restore from Restic
-    # Find the latest snapshot with the matching tag
-    echo "Finding latest snapshot for VDI $VDI_UUID..."
-    SNAPSHOT_ID=$(restic snapshots --host "$VM_NAME" --tag "xcp-vdi-$VDI_UUID" --json --latest 1 | jq -r '.[0].short_id')
-
-    if [ -z "$SNAPSHOT_ID" ] || [ "$SNAPSHOT_ID" = "null" ]; then
-        echo "Error: No snapshot found for VDI $VDI_UUID"
-        exit 1
-    fi
-
-    echo "Found snapshot: $SNAPSHOT_ID"
-    echo "Restoring to $vdb_dir/vdi.raw..."
+    # Restore from Restic using latest snapshot with matching tag
+    echo "Restoring latest snapshot for VDI $VDI_UUID to $vdb_dir/vdi.raw..."
+    XCP_VM_NAME=$(cat xcp-vm-name)
 
     # Restore the file from Restic to the vdb directory
-    restic restore "$SNAPSHOT_ID" --target "$vdb_dir" --include "xcp-vdi-$VDI_UUID.raw"
+    restic restore latest --host "$XCP_VM_NAME" --tag "xcp-vdi-$VDI_UUID" --target "$vdb_dir" --include "xcp-vdi-$VDI_UUID.raw"
 
     # Create symlink to vdi.raw
     ln -sf "xcp-vdi-$VDI_UUID.raw" "$vdb_dir/vdi.raw"
