@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euox pipefail
+set -euo pipefail
 
 # Restore VM disks from Restic
 # Usage: Run from within the VM directory
