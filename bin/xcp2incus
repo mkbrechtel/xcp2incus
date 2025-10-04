@@ -5,9 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 show_help() {
     echo "Available subcommands:"
-    for script in "$SCRIPT_DIR/scripts"/*.sh; do
+    for script in "$SCRIPT_DIR/scripts"/*.sh "$SCRIPT_DIR/scripts"/*.py; do
         [ -f "$script" ] || continue
-        basename "$script" .sh
+        basename "$script" | sed -E 's/\.(sh|py)$//'
     done
 }
 
@@ -56,24 +56,31 @@ if [ "$SUBCOMMAND" = "next" ]; then
 
     # Determine next script to execute
     # Status is a number when idle (e.g., "5" means step 5 is complete, run step 10 next)
-    # Status can also be a script name (e.g., "10-backup-disks-to-restic") which we treat as the number part
+    # Status can also be a script name (e.g., "10-backup-disks-to-restic") indicating the script is in progress
     if [[ "$CURRENT_STATUS" =~ ^[0-9]+$ ]]; then
+        # Status is a number - last step completed, find next step
         PROGRESS_NUM="$CURRENT_STATUS"
+        FIND_GREATER_THAN=true
     elif [[ "$CURRENT_STATUS" =~ ^([0-9]+)- ]]; then
-        # Extract number from script name format
+        # Status is a script name - script is in progress, reexecute it
         PROGRESS_NUM="${BASH_REMATCH[1]}"
+        FIND_GREATER_THAN=false
     else
         echo "Error: Invalid status format '$CURRENT_STATUS'" >&2
         exit 1
     fi
 
-    # Find next script with number greater than current progress
+    # Find next script to execute
     # Check local directory first, then global scripts directory
     NEXT_SCRIPT=""
-    for script in [0-9]*-*.sh "$SCRIPT_DIR/scripts"/[0-9]*-*.sh; do
+    for script in [0-9]*-*.sh [0-9]*-*.py "$SCRIPT_DIR/scripts"/[0-9]*-*.sh "$SCRIPT_DIR/scripts"/[0-9]*-*.py; do
         [ -f "$script" ] || continue
         SCRIPT_NUM=$(basename "$script" | cut -d- -f1)
-        if [ "$SCRIPT_NUM" -gt "$PROGRESS_NUM" ]; then
+
+        # If status is a script name, reexecute the same step
+        # If status is a number, find the next step
+        if { [ "$FIND_GREATER_THAN" = true ] && [ "$SCRIPT_NUM" -gt "$PROGRESS_NUM" ]; } || \
+           { [ "$FIND_GREATER_THAN" = false ] && [ "$SCRIPT_NUM" -eq "$PROGRESS_NUM" ]; }; then
             # Check if we should stop at --till limit
             if [ -n "$TILL_PROGRESS" ] && [ "$SCRIPT_NUM" -gt "$TILL_PROGRESS" ]; then
                 echo "Reached --till limit ($TILL_PROGRESS)"
@@ -95,11 +102,15 @@ fi
 
 shift
 
+# Try .sh first, then .py
 SCRIPT_PATH="$SCRIPT_DIR/scripts/$SUBCOMMAND.sh"
+if [ ! -f "$SCRIPT_PATH" ]; then
+    SCRIPT_PATH="$SCRIPT_DIR/scripts/$SUBCOMMAND.py"
+fi
 
 if [ ! -f "$SCRIPT_PATH" ]; then
     echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2
-    echo "Script not found: $SCRIPT_PATH" >&2
+    echo "Script not found: $SCRIPT_DIR/scripts/$SUBCOMMAND.{sh,py}" >&2
     exit 1
 fi
 
