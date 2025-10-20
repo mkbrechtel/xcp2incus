@@ -75,7 +75,7 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
   $DEVICE_NAME:
     type: disk
     path: /
-    pool: default
+    pool: data
     size: ${VDI_SIZE_GIB}GiB
 EOF
         FIRST_DISK=false
@@ -84,7 +84,7 @@ EOF
         cat >> incus-vm.yaml << EOF
   $DEVICE_NAME:
     type: disk
-    pool: default
+    pool: data
     size: ${VDI_SIZE_GIB}GiB
 EOF
     fi
