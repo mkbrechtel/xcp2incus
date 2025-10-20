@@ -16,6 +16,16 @@ echo "$SCRIPT_NAME" > status
 
 echo "Preparing Incus VM configuration"
 
+# Set default instance name from folder name if not specified
+if [ ! -f incus-instance-name ]; then
+    INSTANCE_NAME=$(basename "$PWD")
+    echo "$INSTANCE_NAME" > incus-instance-name
+    echo "Using default instance name from folder: $INSTANCE_NAME"
+else
+    INSTANCE_NAME=$(cat incus-instance-name)
+    echo "Using existing instance name: $INSTANCE_NAME"
+fi
+
 # Find all vdb-* directories
 shopt -s nullglob
 VDB_DIRS=(vdb-*)
