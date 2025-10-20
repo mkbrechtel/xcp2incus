@@ -1,8 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Shutdown VM and create snapshot after boot issues have been fixed
+# Create snapshot after boot issues have been fixed (stops VM if running)
 # Usage: Run from within the VM directory after verifying VM boots correctly
+# Note: Works whether VM is running or already stopped
 
 # Extract step info from script name
 SCRIPT_NAME=$(basename "$0" .sh)
@@ -25,14 +26,16 @@ if ! incus list -f csv | grep -q "^${INSTANCE_NAME},"; then
     exit 1
 fi
 
-# Check if VM is running and stop it
+# Check VM state and stop if running
 VM_STATE=$(incus list -f csv -c ns | grep "^${INSTANCE_NAME}," | cut -d, -f2)
+echo "Current VM state: $VM_STATE"
+
 if [ "$VM_STATE" = "RUNNING" ]; then
     echo "Stopping VM gracefully..."
     incus stop "$INSTANCE_NAME"
     echo "✓ VM stopped"
 else
-    echo "VM is already stopped"
+    echo "✓ VM is already stopped, proceeding with snapshot"
 fi
 
 # Create snapshot with descriptive name
