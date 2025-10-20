@@ -16,7 +16,6 @@ echo "$SCRIPT_NAME" > status
 
 # Read instance name
 INSTANCE_NAME=$(cat incus-instance-name)
-INCUS_HOST=$(cat incus-host)
 
 echo "Initializing Incus VM: $INSTANCE_NAME"
 
@@ -29,10 +28,10 @@ fi
 echo "Using configuration:"
 cat incus-vm.yaml
 
-# Initialize the VM on the Incus host
+# Initialize the VM using local Incus CLI (already configured to connect to remote)
 echo ""
 echo "Initializing VM on Incus host..."
-ssh "$INCUS_HOST" "incus init --empty --vm $INSTANCE_NAME" < incus-vm.yaml
+incus init --empty --vm "$INSTANCE_NAME" < incus-vm.yaml
 
 echo "✓ VM initialized successfully"
 

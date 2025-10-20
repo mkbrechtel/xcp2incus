@@ -23,8 +23,6 @@ Each VM being migrated has its own directory containing metadata files. A direct
 ├── xcp2incus.env          # Global environment variables for the VM migration
 ├── xcp-vm-uuid            # UUID of the source XCP-ng VM
 ├── xcp-host               # Hostname/IP of the source XCP-ng host
-├── incus-host             # Hostname/IP of the destination Incus host
-├── incus-project          # Target Incus project name
 ├── incus-instance-name    # Name for the VM instance in Incus
 ├── primary-ip             # Primary IP address of the VM
 └── status                 # Current migration status and action step
@@ -35,8 +33,6 @@ Each VM being migrated has its own directory containing metadata files. A direct
 - **xcp2incus.env**: Global environment variables for the VM migration (also serves as marker file)
 - **xcp-vm-uuid**: UUID of the VM in XCP-ng
 - **xcp-host**: Source XCP-ng host hostname or IP address
-- **incus-host**: Destination Incus host hostname or IP address
-- **incus-project**: Target project name in Incus
 - **incus-instance-name**: Name for the VM instance in Incus
 - **primary-ip**: Primary IP address of the VM
 - **status**: Current migration status. Contains just a number when idle (e.g., "35"), the script name without extension when a step is running (e.g., "40-shutdown-vm"), and increments by one when a step completes (e.g., "41")
