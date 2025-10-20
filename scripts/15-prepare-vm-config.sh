@@ -29,6 +29,13 @@ echo "Found ${#VDB_DIRS[@]} disk(s) to configure"
 
 # Start creating incus-vm.yaml
 cat > incus-vm.yaml << 'EOF'
+config:
+  limits.memory: 1GiB
+  limits.cpu: 2
+  #security.secureboot: "false"
+  #security.csm: "true"
+profiles:
+- rescue
 devices:
 EOF
 
