@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Finalize VM configuration - shutdown rescue mode, remove rescue profile, apply final config
+# Reboot to VM OS - shutdown rescue mode, remove rescue profile, apply final config, and start VM
 # Usage: Run from within the VM directory
 
 # Extract step info from script name
@@ -93,13 +93,20 @@ fi
 echo ""
 echo "✓ VM configuration finalized"
 echo ""
-echo "The VM is now ready to boot with:"
+echo "The VM is now configured with:"
 echo "  - No profiles (rescue profile removed)"
 echo "  - Secure boot disabled"
 echo "  - CSM enabled for legacy boot support"
 echo ""
-echo "To start the VM, run:"
-echo "  incus start $INSTANCE_NAME"
+echo "Starting VM with native OS..."
+incus start "$INSTANCE_NAME"
+
+echo ""
+echo "✓ VM started successfully"
+echo ""
+echo "The VM is now running its native operating system."
+echo "To access the VM console, run:"
+echo "  incus console $INSTANCE_NAME"
 
 # Mark step complete
 echo "$((STEP_NUM + 1))" > status
