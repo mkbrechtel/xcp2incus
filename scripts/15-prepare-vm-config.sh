@@ -37,15 +37,24 @@ fi
 
 echo "Found ${#VDB_DIRS[@]} disk(s) to configure"
 
-# Start creating incus-vm.yaml
+# Start creating incus-vm-rescue.yaml (for rescue mode)
+cat > incus-vm-rescue.yaml << 'EOF'
+config:
+  limits.memory: 1GiB
+  limits.cpu: 2
+profiles:
+- rescue
+devices:
+EOF
+
+# Also start creating incus-vm.yaml (for final VM)
 cat > incus-vm.yaml << 'EOF'
 config:
   limits.memory: 1GiB
   limits.cpu: 2
-  #security.secureboot: "false"
-  #security.csm: "true"
-profiles:
-- rescue
+  security.secureboot: "false"
+  security.csm: "true"
+profiles: []
 devices:
 EOF
 
@@ -68,9 +77,16 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
 
     echo "Disk $DEVICE_NAME: ${VDI_SIZE_GIB}GiB (${VDI_SIZE_BYTES} bytes)"
 
-    # Add disk to yaml
+    # Add disk to both yaml files
     if [ "$FIRST_DISK" = true ]; then
         # First disk is the root disk
+        cat >> incus-vm-rescue.yaml << EOF
+  $DEVICE_NAME:
+    type: disk
+    path: /
+    pool: data
+    size: ${VDI_SIZE_GIB}GiB
+EOF
         cat >> incus-vm.yaml << EOF
   $DEVICE_NAME:
     type: disk
@@ -81,6 +97,12 @@ EOF
         FIRST_DISK=false
     else
         # Additional disks
+        cat >> incus-vm-rescue.yaml << EOF
+  $DEVICE_NAME:
+    type: disk
+    pool: data
+    size: ${VDI_SIZE_GIB}GiB
+EOF
         cat >> incus-vm.yaml << EOF
   $DEVICE_NAME:
     type: disk
@@ -91,7 +113,10 @@ EOF
 done
 
 echo ""
-echo "Created incus-vm.yaml:"
+echo "Created incus-vm-rescue.yaml (for rescue mode):"
+cat incus-vm-rescue.yaml
+echo ""
+echo "Created incus-vm.yaml (for final VM, secure boot disabled):"
 cat incus-vm.yaml
 
 # Mark step complete
