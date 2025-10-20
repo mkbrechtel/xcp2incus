@@ -44,13 +44,10 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
     # Extract device name from vdb_dir (e.g., vdb-xvda -> xvda)
     VDB_DEVICE="${vdb_dir#vdb-}"
 
-    # Convert XCP device name to Incus device name (e.g., xvda -> vda)
-    DISK_NAME="${VDB_DEVICE#x}"
-
     echo ""
     echo "Restoring $vdb_dir (VDI: $VDI_UUID)"
     echo "Size: ${VDI_SIZE_GIB} GiB"
-    echo "Target device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${DISK_NAME}"
+    echo "Target device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${VDB_DEVICE}"
 
     # Find the latest snapshot with the VDI tag
     echo "Finding latest snapshot with tag xcp-vdi-$VDI_UUID..."
@@ -67,7 +64,7 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
     echo "Restoring disk image..."
     restic dump "$SNAPSHOT_ID" "xcp-vdi-$VDI_UUID.raw" | \
         pv -s "$VDI_SIZE" | \
-        incus exec "$INSTANCE_NAME" dd of=/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${DISK_NAME}
+        incus exec "$INSTANCE_NAME" dd of=/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${VDB_DEVICE}
 
     echo "✓ Restore completed for $vdb_dir"
 done
