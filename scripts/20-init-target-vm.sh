@@ -11,6 +11,17 @@ STEP_NUM=$(echo "$SCRIPT_NAME" | cut -d- -f1)
 # Source environment variables
 source xcp2incus.env
 
+# Get Incus project name (from incus-project file or parent directory)
+get_incus_project() {
+    if [ -f "incus-project" ]; then
+        cat incus-project
+    else
+        basename "$(dirname "$(pwd)")"
+    fi
+}
+
+INCUS_PROJECT=$(get_incus_project)
+
 # Update status
 echo "$SCRIPT_NAME" > status
 
@@ -31,7 +42,8 @@ cat incus-vm-rescue.yaml
 # Initialize the VM using local Incus CLI (already configured to connect to remote)
 echo ""
 echo "Initializing VM on Incus host with rescue profile..."
-incus init --empty --vm "$INSTANCE_NAME" < incus-vm-rescue.yaml
+echo "Using Incus project: $INCUS_PROJECT"
+incus --project "$INCUS_PROJECT" init --empty --vm "$INSTANCE_NAME" < incus-vm-rescue.yaml
 
 echo "✓ VM initialized successfully"
 

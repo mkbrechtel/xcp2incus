@@ -12,6 +12,17 @@ STEP_NUM=$(echo "$SCRIPT_NAME" | cut -d- -f1)
 # Source environment variables
 source xcp2incus.env
 
+# Get Incus project name (from incus-project file or parent directory)
+get_incus_project() {
+    if [ -f "incus-project" ]; then
+        cat incus-project
+    else
+        basename "$(dirname "$(pwd)")"
+    fi
+}
+
+INCUS_PROJECT=$(get_incus_project)
+
 # Update status
 echo "$SCRIPT_NAME" > status
 
@@ -64,7 +75,7 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
     echo "Restoring disk image..."
     restic dump "$SNAPSHOT_ID" "xcp-vdi-$VDI_UUID.raw" | \
         pv -s "$VDI_SIZE" | \
-        incus exec "$INSTANCE_NAME" dd of=/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${VDB_DEVICE}
+        incus --project "$INCUS_PROJECT" exec "$INSTANCE_NAME" dd of=/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_${VDB_DEVICE}
 
     echo "✓ Restore completed for $vdb_dir"
 done
