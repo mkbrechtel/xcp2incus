@@ -58,7 +58,7 @@ def main():
 
     # Collect data
     rows = []
-    headers = ["TICKETID", "INFO", "PROJECT", "VM NAME", "STATUS", "PLAN", "XCP HOST", "INCUS INSTANCE", "PRIMARY IP", "VDBS"]
+    headers = ["TICKETID", "INFO", "PROJECT", "VM NAME", "STATUS", "PLAN", "PRIMARY IP", "VDBS"]
 
     for vm_dir in vm_dirs:
         vm_name = os.path.basename(vm_dir)
@@ -72,15 +72,13 @@ def main():
         info = read_file(os.path.join(vm_dir, "info"))
         plan = read_file(os.path.join(vm_dir, "plan")).split('\n')[0] if read_file(os.path.join(vm_dir, "plan")) else ""
         ticketid = read_file(os.path.join(vm_dir, "ticketid"))
-        xcp_host = read_file(os.path.join(vm_dir, "xcp-host"))
-        incus_instance = read_file(os.path.join(vm_dir, "incus-instance-name"))
         primary_ip = read_file(os.path.join(vm_dir, "primary-ip"))
         vdbs = get_vdbs(vm_dir)
 
         # Format status with leading zero if needed
         formatted_status = format_status(status)
 
-        rows.append([ticketid, info, project, vm_name, formatted_status, plan, xcp_host, incus_instance, primary_ip, vdbs])
+        rows.append([ticketid, info, project, vm_name, formatted_status, plan, primary_ip, vdbs])
 
     # Calculate column widths
     col_widths = [len(h) for h in headers]
