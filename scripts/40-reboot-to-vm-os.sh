@@ -73,37 +73,10 @@ echo "Applying final configuration from incus-vm.yaml..."
 echo "Configuration to apply:"
 cat incus-vm.yaml
 
-# Extract and apply configuration settings
+# Apply configuration by importing YAML
 echo ""
 echo "Updating VM configuration..."
-
-# Set memory limit
-MEMORY_LIMIT=$(grep "limits.memory:" incus-vm.yaml | awk '{print $2}')
-if [ -n "$MEMORY_LIMIT" ]; then
-    incus --project "$INCUS_PROJECT" config set "$INSTANCE_NAME" limits.memory "$MEMORY_LIMIT"
-    echo "  Set limits.memory=$MEMORY_LIMIT"
-fi
-
-# Set CPU limit
-CPU_LIMIT=$(grep "limits.cpu:" incus-vm.yaml | awk '{print $2}')
-if [ -n "$CPU_LIMIT" ]; then
-    incus --project "$INCUS_PROJECT" config set "$INSTANCE_NAME" limits.cpu "$CPU_LIMIT"
-    echo "  Set limits.cpu=$CPU_LIMIT"
-fi
-
-# Set security.secureboot
-SECUREBOOT=$(grep "security.secureboot:" incus-vm.yaml | awk '{print $2}' | tr -d '"')
-if [ -n "$SECUREBOOT" ]; then
-    incus --project "$INCUS_PROJECT" config set "$INSTANCE_NAME" security.secureboot "$SECUREBOOT"
-    echo "  Set security.secureboot=$SECUREBOOT"
-fi
-
-# Set security.csm
-CSM=$(grep "security.csm:" incus-vm.yaml | awk '{print $2}' | tr -d '"')
-if [ -n "$CSM" ]; then
-    incus --project "$INCUS_PROJECT" config set "$INSTANCE_NAME" security.csm "$CSM"
-    echo "  Set security.csm=$CSM"
-fi
+incus --project "$INCUS_PROJECT" config edit "$INSTANCE_NAME" < incus-vm.yaml
 
 echo ""
 echo "✓ VM configuration finalized"
