@@ -18,6 +18,9 @@ XCP_HOST=$(cat xcp-host)
 # Update status
 echo "$SCRIPT_NAME" > status
 
+# Trap errors and mark status as failed
+trap 'if [ $? -ne 0 ]; then echo "FAIL-$(cat status)" > status; fi' EXIT
+
 # Find all vdb-* directories
 shopt -s nullglob
 VDB_DIRS=(vdb-*)

@@ -18,6 +18,9 @@ XCP_HOST=$(cat xcp-host)
 # Update status
 echo "$SCRIPT_NAME" > status
 
+# Trap errors and mark status as failed
+trap 'if [ $? -ne 0 ]; then echo "FAIL-$(cat status)" > status; fi' EXIT
+
 # Get VM name and save to xcp-vm-name
 VM_NAME=$(ssh "$XCP_HOST" "xe vm-param-get uuid=$VM_UUID param-name=name-label")
 echo "$VM_NAME" > xcp-vm-name

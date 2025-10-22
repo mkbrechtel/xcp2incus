@@ -26,6 +26,9 @@ INCUS_PROJECT=$(get_incus_project)
 # Update status
 echo "$SCRIPT_NAME" > status
 
+# Trap errors and mark status as failed
+trap 'if [ $? -ne 0 ]; then echo "FAIL-$(cat status)" > status; fi' EXIT
+
 # Read instance name
 INSTANCE_NAME=$(cat incus-instance-name)
 
