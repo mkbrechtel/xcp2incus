@@ -58,10 +58,11 @@ def main():
 
     # Collect data
     rows = []
-    headers = ["TICKETID", "INFO", "VM NAME", "STATUS", "PLAN", "XCP HOST", "INCUS INSTANCE", "PRIMARY IP", "VDBS"]
+    headers = ["TICKETID", "INFO", "PROJECT", "VM NAME", "STATUS", "PLAN", "XCP HOST", "INCUS INSTANCE", "PRIMARY IP", "VDBS"]
 
     for vm_dir in vm_dirs:
         vm_name = os.path.basename(vm_dir)
+        project = os.path.basename(os.path.dirname(vm_dir))
         status = read_file(os.path.join(vm_dir, "status"))
 
         # Skip VMs with status "100" unless --all flag is set
@@ -79,7 +80,7 @@ def main():
         # Format status with leading zero if needed
         formatted_status = format_status(status)
 
-        rows.append([ticketid, info, vm_name, formatted_status, plan, xcp_host, incus_instance, primary_ip, vdbs])
+        rows.append([ticketid, info, project, vm_name, formatted_status, plan, xcp_host, incus_instance, primary_ip, vdbs])
 
     # Calculate column widths
     col_widths = [len(h) for h in headers]
