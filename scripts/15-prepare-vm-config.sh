@@ -72,10 +72,7 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
     # Read VDI size in bytes
     VDI_SIZE_BYTES=$(cat "$vdb_dir/xcp-vdi-size")
 
-    # Convert bytes to GiB (rounded up to ensure sufficient space)
-    VDI_SIZE_GIB=$(echo "scale=0; ($VDI_SIZE_BYTES + 1073741823) / 1073741824" | bc)
-
-    echo "Disk $DEVICE_NAME: ${VDI_SIZE_GIB}GiB (${VDI_SIZE_BYTES} bytes)"
+    echo "Disk $DEVICE_NAME: ${VDI_SIZE_BYTES} bytes"
 
     # Add disk to both yaml files
     if [ "$FIRST_DISK" = true ]; then
@@ -84,15 +81,15 @@ for vdb_dir in "${VDB_DIRS[@]}"; do
   $DEVICE_NAME:
     type: disk
     path: /
-    pool: data
-    size: ${VDI_SIZE_GIB}GiB
+    pool: default
+    size: ${VDI_SIZE_BYTES}
 EOF
         cat >> incus-vm.yaml << EOF
   $DEVICE_NAME:
     type: disk
     path: /
-    pool: data
-    size: ${VDI_SIZE_GIB}GiB
+    pool: default
+    size: ${VDI_SIZE_BYTES}
 EOF
         FIRST_DISK=false
     else
@@ -100,14 +97,14 @@ EOF
         cat >> incus-vm-rescue.yaml << EOF
   $DEVICE_NAME:
     type: disk
-    pool: data
-    size: ${VDI_SIZE_GIB}GiB
+    pool: default
+    size: ${VDI_SIZE_BYTES}
 EOF
         cat >> incus-vm.yaml << EOF
   $DEVICE_NAME:
     type: disk
-    pool: data
-    size: ${VDI_SIZE_GIB}GiB
+    pool: default
+    size: ${VDI_SIZE_BYTES}
 EOF
     fi
 done
